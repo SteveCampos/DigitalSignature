@@ -66,10 +66,15 @@ public class MainActivity extends AppCompatActivity {
     private final static String DOCINTRO = "docintro.properties";
     private final static String DOCUMENTO  ="20138122256-01-F101-00000007.XML";
     private final static String BKS  ="union.bks";
+    private final static String JKS  ="union.jks";
+    private final static String PATH_DOCUMENTO_FIRMADO  ="file:///android_asset/factura_firmada.xml";
+
+
 
     private Document documentoFirmado;
-    private Document docSinFirmar;
-    private InputStream keystore;
+    //private Document docSinFirmar;
+    public InputStream docSinFirmar;
+    public InputStream keystore;
 
     Document getDocumentFromFilePath(String filePath)
             throws IOException, ParserConfigurationException, SAXException {
@@ -97,19 +102,18 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        try {
-            docSinFirmar = getDocumentFromFilePath(DOCUMENTO);
-            keystore = getFilefromAssets(BKS);
-            //documentoFirmado = DigitalSignature.add(doc, "UBLExtensions",getFilefromAssets(DOCINTRO));
 
+
+        try {
+            docSinFirmar = getFilefromAssets(DOCUMENTO);
+            keystore = getFilefromAssets(BKS);
 
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
         }
+        //documentoFirmado = DigitalSignature.add(doc, "UBLExtensions",getFilefromAssets(DOCINTRO));
+
+
 
 
 
@@ -126,6 +130,34 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
+                try {
+                    documentoFirmado = Signature.add(keystore,docSinFirmar,PATH_DOCUMENTO_FIRMADO);
+                    textView.setText(documentoFirmado.getTextContent());
+                } catch (NoSuchAlgorithmException e) {
+                    e.printStackTrace();
+                } catch (InvalidAlgorithmParameterException e) {
+                    e.printStackTrace();
+                } catch (KeyStoreException e) {
+                    e.printStackTrace();
+                } catch (CertificateException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (UnrecoverableEntryException e) {
+                    e.printStackTrace();
+                } catch (ParserConfigurationException e) {
+                    e.printStackTrace();
+                } catch (SAXException e) {
+                    e.printStackTrace();
+                } catch (MarshalException e) {
+                    e.printStackTrace();
+                } catch (XMLSignatureException e) {
+                    e.printStackTrace();
+                } catch (TransformerException e) {
+                    e.printStackTrace();
+                }
+
+/*
                 String texto = editText.getText().toString();
 
 
@@ -163,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 } catch (UnrecoverableEntryException e) {
                     e.printStackTrace();
                 }
-
+*/
 
                 //new GenerateDigitalSignature().execute();
 
@@ -230,7 +262,6 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             try {
-
                 //String textoSHA1 = CodigoSHA1.SHA1(texto);
                 textoSHA1 = CodigoSHA1.SHA1(byteReads);
                 String str = new String(byteReads, "iso-8859-1");
@@ -240,12 +271,15 @@ public class MainActivity extends AppCompatActivity {
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-
-
             try {
                 byte[] SHA1Generate = handlerXML.putSHA1toXML(getApplicationContext(), textoSHA1);
-                String str = new String(SHA1Generate, "iso-8859-1");
-                textView.append(str + " FIRMADO.\n");
+                final String str = new String(SHA1Generate, "iso-8859-1");
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        textView.append(str + " FIRMADO.\n");
+                    }
+                });
             } catch (IOException e) {
                 e.printStackTrace();
             } catch (ParserConfigurationException e) {
