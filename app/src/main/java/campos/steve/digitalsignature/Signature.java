@@ -3,6 +3,7 @@ package campos.steve.digitalsignature;
 
 import android.util.Log;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -23,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.xml.crypto.MarshalException;
 
+import javax.xml.crypto.URIDereferencer;
 import javax.xml.crypto.dsig.CanonicalizationMethod;
 import javax.xml.crypto.dsig.DigestMethod;
 import javax.xml.crypto.dsig.Reference;
@@ -59,20 +61,23 @@ public class Signature {
     * FILEINPUTSTREAM SIN FIRMAR
     * PATH DE LA SALIDA
     * */
-    public static Document add(InputStream JKS, InputStream DocumentoSinFirmar, String pathDocumentoFirmado) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, FileNotFoundException, IOException, UnrecoverableEntryException, ParserConfigurationException, SAXException, MarshalException, XMLSignatureException, TransformerConfigurationException, TransformerException  {
+    public static File add(InputStream JKS, InputStream DocumentoSinFirmar, File fileDocumentoFirmado) throws NoSuchAlgorithmException, InvalidAlgorithmParameterException, KeyStoreException, CertificateException, FileNotFoundException, IOException, UnrecoverableEntryException, ParserConfigurationException, SAXException, MarshalException, XMLSignatureException, TransformerConfigurationException, TransformerException  {
 
+        Security.addProvider(new org.jcp.xml.dsig.internal.dom.XMLDSigRI());
         Provider providerCrypto = null;
         for (Provider p : Security.getProviders()) {
-
             Log.d("PROVIDERS",p.getName());
             Log.d("INFO", p.getInfo());
+            //Log.d("SERVICES", ""+p.getServices());
 
         }
 
         XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
+
         Reference ref = fac.newReference("", fac.newDigestMethod(DigestMethod.SHA1, null),
-                Collections.singletonList(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec)null)),
+                Collections.singletonList(fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)),
                 null, null);
+
         SignedInfo si = fac.newSignedInfo(fac.newCanonicalizationMethod(CanonicalizationMethod.INCLUSIVE,
                         (C14NMethodParameterSpec)null),
                 fac.newSignatureMethod(SignatureMethod.RSA_SHA1, null),
@@ -102,14 +107,14 @@ public class Signature {
 
         signature.sign(dsc);
 
-        OutputStream os = new FileOutputStream(pathDocumentoFirmado);
+
+        OutputStream os = new FileOutputStream(fileDocumentoFirmado);
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer trans = tf.newTransformer();
         trans.transform(new DOMSource(doc), new StreamResult(os));
-        Log.d("DOC",doc.getTextContent());
-        return doc;
+
+        Log.d("PATH FIRMA",fileDocumentoFirmado.getAbsolutePath());
+        //Log.d("DOC",dsc.getParent().getTextContent());
+        return fileDocumentoFirmado;
     }
-
-
-
 }

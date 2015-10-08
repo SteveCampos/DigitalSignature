@@ -67,11 +67,11 @@ public class MainActivity extends AppCompatActivity {
     private final static String DOCUMENTO  ="20138122256-01-F101-00000007.XML";
     private final static String BKS  ="union.bks";
     private final static String JKS  ="union.jks";
-    private final static String PATH_DOCUMENTO_FIRMADO  ="file:///android_asset/factura_firmada.xml";
+    private final static String PATH_DOCUMENTO_FIRMADO  ="factura_firmada.XML";
 
 
 
-    private Document documentoFirmado;
+    private File documentoFirmado;
     //private Document docSinFirmar;
     public InputStream docSinFirmar;
     public InputStream keystore;
@@ -85,6 +85,15 @@ public class MainActivity extends AppCompatActivity {
         return builder.parse(is);
     }
 
+    File createFile(String pathFile)
+            throws IOException, ParserConfigurationException, SAXException {
+        return File.createTempFile(pathFile,"xml",contexto.getCacheDir());
+    }
+
+
+
+
+
     InputStream getFilefromAssets(String nameDocument)
             throws IOException
     {
@@ -92,7 +101,35 @@ public class MainActivity extends AppCompatActivity {
         return am.open(nameDocument);
     }
 
+    public static String readFileAsString(File file) {
+        String result = "";
+            //byte[] buffer = new byte[(int) new File(filePath).length()];
+            FileInputStream fis = null;
+            try {
+                //f = new BufferedInputStream(new FileInputStream(filePath));
+                //f.read(buffer);
 
+                fis = new FileInputStream(file);
+                char current;
+                while (fis.available() > 0) {
+                    current = (char) fis.read();
+                    result = result + String.valueOf(current);
+
+                }
+
+            } catch (Exception e) {
+                Log.d("TourGuide", e.toString());
+            } finally {
+                if (fis != null)
+                    try {
+                        fis.close();
+                    } catch (IOException ignored) {
+                    }
+            }
+            //result = new String(buffer);
+
+        return result;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,8 +168,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
 
                 try {
-                    documentoFirmado = Signature.add(keystore,docSinFirmar,PATH_DOCUMENTO_FIRMADO);
-                    textView.setText(documentoFirmado.getTextContent());
+                    documentoFirmado = Signature.add(keystore,docSinFirmar,createFile("factura_firmada"));
+                    textView.setText(documentoFirmado.getAbsolutePath()+"."+readFileAsString(documentoFirmado));
                 } catch (NoSuchAlgorithmException e) {
                     e.printStackTrace();
                 } catch (InvalidAlgorithmParameterException e) {
